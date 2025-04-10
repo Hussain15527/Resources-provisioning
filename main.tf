@@ -12,7 +12,7 @@ module "public_subnet_1" {
 
   vpc_id = module.vpc.id
 
-  subnet_cidr = "10.0.0.0/26"  # First half (10.0.0.0 - 10.0.0.63)
+  subnet_cidr = "10.0.0.0/26"  
   availability_zone  = "ap-south-1a"
   project_name       = module.vpc.project_name
   subnet_type        = "public"
@@ -24,7 +24,7 @@ module "public_subnet_2" {
 
   vpc_id = module.vpc.id
 
-  subnet_cidr = "10.0.0.64/26"  # Second half (10.0.0.64 - 10.0.0.127)
+  subnet_cidr = "10.0.0.64/26"  
   availability_zone  = "ap-south-1b"
   project_name       = module.vpc.project_name
   subnet_type        = "public"
@@ -129,7 +129,7 @@ resource "aws_security_group" "app_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
     }
-    
+
   egress {
     from_port   = 0
     to_port     = 0
