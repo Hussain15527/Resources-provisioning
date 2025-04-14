@@ -227,9 +227,10 @@ resource "aws_route_table_association" "private_subnet_asso" {
 }
 
 # launch template for the auto scaling group
+# launch template for the auto scaling group
 resource "aws_launch_template" "app_lt" {
   name_prefix   = "${module.vpc.project_name}-lt-"
-  image_id      = "ami-0a0f1259dd1c90938"  # Amazon Linux 2 in ap-south-1, update as needed
+  image_id      = "ami-0a0f1259dd1c90938"  # Amazon Linux 2 in ap-south-1
   instance_type = "t2.micro"
   
   vpc_security_group_ids = [aws_security_group.app_sg.id]
@@ -238,11 +239,38 @@ resource "aws_launch_template" "app_lt" {
     #!/bin/bash
     yum update -y
     yum install -y nodejs npm git
+    
+    # Create a directory for the application
     mkdir -p /home/ec2-user/app
     cd /home/ec2-user/app
-    git clone https://gitlab.com/your-repo/hello-world-nodejs.git .
+    
+    # Clone the repository
+    git clone https://github.com/Hussain15527/Hello-world-task-server.git .
+    
+    # Install dependencies from package.json
     npm install
-    node index.js &
+    
+    # Make sure the app starts on system boot
+    cat > /etc/systemd/system/express-app.service << 'EOL'
+    [Unit]
+    Description=Express.js Application
+    After=network.target
+
+    [Service]
+    Environment=PORT=80
+    Type=simple
+    User=root
+    WorkingDirectory=/home/ec2-user/app
+    ExecStart=/usr/bin/node /home/ec2-user/app/server.js
+    Restart=on-failure
+
+    [Install]
+    WantedBy=multi-user.target
+    EOL
+    
+    # Enable and start the service
+    systemctl enable express-app
+    systemctl start express-app
     EOF
   )
   
@@ -259,7 +287,7 @@ resource "aws_autoscaling_group" "app_asg" {
   name                = "${module.vpc.project_name}-asg"
   max_size            = 3
   min_size            = 1
-  desired_capacity    = 2
+  desired_capacity    = 1  
   vpc_zone_identifier = [module.private_subnet_app.id]
   target_group_arns   = [aws_lb_target_group.app_tg.arn]
   health_check_type   = "ELB"
